@@ -39,7 +39,7 @@ def parse_args():
   )
 
   # basic config
-  parser.add_argument('--seed', type=int, default=0, help='random seed')
+  parser.add_argument('--seed', type=int, default=2023, help='random seed')
   parser.add_argument(
       '--model',
       type=str,
