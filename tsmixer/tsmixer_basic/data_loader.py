@@ -93,10 +93,10 @@ class TSFDataLoader:
     self.n_feature = self.train_df.shape[-1]
 
   def _split_window(self, data):
-    inputs = data[:, : self.seq_len ,:]
+    inputs = data[:, : self.seq_len, :]
     labels = data[:, self.seq_len :, self.target_slice]
     # Slicing doesn't preserve static shape information, so set the shapes
-    # manually. This way the tf.data.Datasets are easier to inspect.
+    # manually. This way the `tf.data.Datasets` are easier to inspect.
     inputs.set_shape([None, self.seq_len, None])
     labels.set_shape([None, self.pred_len, None])
     return inputs, labels
