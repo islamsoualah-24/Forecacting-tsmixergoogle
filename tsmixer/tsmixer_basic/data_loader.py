@@ -16,51 +16,44 @@
 """Load raw data and generate time series dataset."""
 
 import os
-
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
+from google.colab import drive
 
-
-DATA_DIR = 'gs://time_series_datasets'
-LOCAL_CACHE_DIR = './dataset/'
 
 
 class TSFDataLoader:
+  
   """Generate data loader from raw data."""
 
-  def __init__(
-      self, data, batch_size, seq_len, pred_len, feature_type, target='OT'
-  ):
-    self.data = data
-    self.batch_size = batch_size
-    self.seq_len = seq_len
-    self.pred_len = pred_len
-    self.feature_type = feature_type
-    self.target = target
-    self.target_slice = slice(0, None)
 
-    self._read_data()
+  def __init__(
+      self, data_file, batch_size, seq_len, pred_len, feature_type, target='OT'
+  ):
+      self.data_file_path = data_file
+      self.batch_size = batch_size
+      self.seq_len = seq_len
+      self.pred_len = pred_len
+      self.feature_type = feature_type
+      self.target = target
+      self.target_slice = slice(0, None)
+
+      self._read_data()
 
   def _read_data(self):
-    """Load raw data and split datasets."""
+    
+    
+# Mount Google Drive
+    drive.mount('/content/drive')
 
-    # copy data from cloud storage if not exists
-    if not os.path.isdir(LOCAL_CACHE_DIR):
-      os.mkdir(LOCAL_CACHE_DIR)
-
-    file_name = self.data + '.csv'
-    cache_filepath = os.path.join(LOCAL_CACHE_DIR, file_name)
-    if not os.path.isfile(cache_filepath):
-      tf.io.gfile.copy(
-          os.path.join(DATA_DIR, file_name), cache_filepath, overwrite=True
-      )
-
-    df_raw = pd.read_csv(cache_filepath)
+    # Load data from Google Drive
+    file_path = os.path.join('/content/drive/MyDrive/electricity_datasets/', self.data_file_path + '.csv')
+    df_raw = pd.read_csv(file_path)
 
     # S: univariate-univariate, M: multivariate-multivariate, MS:
-    # multivariate-univariate
+    # multivariate-univariate        
     df = df_raw.set_index('date')
     if self.feature_type == 'S':
       df = df[[self.target]]
@@ -70,11 +63,11 @@ class TSFDataLoader:
 
     # split train/valid/test
     n = len(df)
-    if self.data.startswith('ETTm'):
+    if self.data_file_path.startswith('ETTm'):
       train_end = 12 * 30 * 24 * 4
       val_end = train_end + 4 * 30 * 24 * 4
       test_end = val_end + 4 * 30 * 24 * 4
-    elif self.data.startswith('ETTh'):
+    elif self.data_file_path.startswith('ETTh'):
       train_end = 12 * 30 * 24
       val_end = train_end + 4 * 30 * 24
       test_end = val_end + 4 * 30 * 24
@@ -100,10 +93,10 @@ class TSFDataLoader:
     self.n_feature = self.train_df.shape[-1]
 
   def _split_window(self, data):
-    inputs = data[:, : self.seq_len, :]
+    inputs = data[:, : self.seq_len ,:]
     labels = data[:, self.seq_len :, self.target_slice]
     # Slicing doesn't preserve static shape information, so set the shapes
-    # manually. This way the `tf.data.Datasets` are easier to inspect.
+    # manually. This way the tf.data.Datasets are easier to inspect.
     inputs.set_shape([None, self.seq_len, None])
     labels.set_shape([None, self.pred_len, None])
     return inputs, labels
