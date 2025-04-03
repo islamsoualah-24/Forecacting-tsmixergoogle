@@ -23,14 +23,21 @@ def res_block(inputs, norm_type, activation, dropout, ff_dim):
   """Residual block of TSMixer."""
 
   norm = (
-      layers.LayerNormalization
-      if norm_type == 'L'
-      else layers.BatchNormalization
+      #layers.LayerNormalization
+      #if norm_type == 'L'
+      #else layers.BatchNormalization
+     if norm_type == 'L':
+        norm = layers.LayerNormalization  # Supports multiple axes
+        norm_layer = norm(axis=[-2, -1])
+     else:
+        norm = layers.BatchNormalization  # Supports only one axis
+        norm_layer = norm(axis=-1)
   )
 
   # Temporal Linear
   #x = norm(axis=[-2, -1])(inputs )
-  x = tf.transpose(inputs, perm=[0, 2, 1])  # [Batch, Channel, Input Length]
+  x = norm(inputs)
+  x = tf.transpose(x, perm=[0, 2, 1])  # [Batch, Channel, Input Length]
   x = layers.Dense(x.shape[-1], activation=activation)(x)
   x = tf.transpose(x, perm=[0, 2, 1])  # [Batch, Input Length, Channel]
   x = layers.Dropout(dropout)(x)
@@ -38,8 +45,9 @@ def res_block(inputs, norm_type, activation, dropout, ff_dim):
 
   # Feature Linear
   #x = norm(axis=[-2, -1])(res)
+  x = norm(res)
   x = layers.Dense(ff_dim, activation=activation)(
-      res
+      x
   )  # [Batch, Input Length, FF_Dim]
   x = layers.Dropout(dropout)(x)
   x = layers.Dense(inputs.shape[-1])(x)  # [Batch, Input Length, Channel]
