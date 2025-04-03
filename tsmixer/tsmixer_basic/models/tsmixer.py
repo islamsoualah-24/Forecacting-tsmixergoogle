@@ -26,17 +26,17 @@ def res_block(inputs, norm_type, activation, dropout, ff_dim):
       #layers.LayerNormalization
       #if norm_type == 'L'
       #else layers.BatchNormalization
-     if norm_type == 'L':
-        norm = layers.LayerNormalization  # Supports multiple axes
-        norm_layer = norm(axis=[-2, -1])
-     else:
-        norm = layers.BatchNormalization  # Supports only one axis
-        norm_layer = norm(axis=-1)
   )
+  if norm_type == 'L':
+      norm = layers.LayerNormalization  # Supports multiple axes
+      norm_layer = norm(axis=[-2, -1])
+  else:
+      norm = layers.BatchNormalization  # Supports only one axis
+      norm_layer = norm(axis=-1)  # Use only the last axis
 
   # Temporal Linear
   #x = norm(axis=[-2, -1])(inputs )
-  x = norm(inputs)
+  x = norm_layer(inputs)
   x = tf.transpose(x, perm=[0, 2, 1])  # [Batch, Channel, Input Length]
   x = layers.Dense(x.shape[-1], activation=activation)(x)
   x = tf.transpose(x, perm=[0, 2, 1])  # [Batch, Input Length, Channel]
@@ -45,7 +45,7 @@ def res_block(inputs, norm_type, activation, dropout, ff_dim):
 
   # Feature Linear
   #x = norm(axis=[-2, -1])(res)
-  x = norm(res)
+  x = norm_layer(res)
   x = layers.Dense(ff_dim, activation=activation)(
       x
   )  # [Batch, Input Length, FF_Dim]
