@@ -31,10 +31,8 @@ def res_block(inputs, norm_type, activation, dropout, ff_dim):
   # Temporal Linear
   x = norm(axis=[-2, -1])(inputs)
   #x = tf.transpose(x, perm=[0, 2, 1])  # [Batch, Channel, Input Length]
-  x = TransposeLayer(perm=[0, 2, 1])(x)
   x = layers.Dense(x.shape[-1], activation=activation)(x)
   #x = tf.transpose(x, perm=[0, 2, 1])  # [Batch, Input Length, Channel]
-  x = TransposeLayer(perm=[0, 2, 1])(x)
   x = layers.Dropout(dropout)(x)
   res = x + inputs
 
