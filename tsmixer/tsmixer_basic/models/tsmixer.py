@@ -67,8 +67,8 @@ def build_model(
   if target_slice:
     x = x[:, :, target_slice]
 
-  x = tf.transpose(x, perm=[0, 2, 1])  # [Batch, Channel, Input Length]
+  #x = tf.transpose(x, perm=[0, 2, 1])  # [Batch, Channel, Input Length]
   x = layers.Dense(pred_len)(x)  # [Batch, Channel, Output Length]
-  outputs = tf.transpose(x, perm=[0, 2, 1])  # [Batch, Output Length, Channel])
-
+  #outputs = tf.transpose(x, perm=[0, 2, 1])  # [Batch, Output Length, Channel])
+  outputs = x
   return tf.keras.Model(inputs, outputs)
